@@ -4,26 +4,52 @@ import { formatCurrency } from "@/lib/formatters"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import Stripe from "stripe"
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
 
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: { payment_intent: string }
+  searchParams: Promise<{ payment_intent: string }>
 }) {
-  const paymentIntent = await stripe.paymentIntents.retrieve(
-    searchParams.payment_intent
-  )
-  if (paymentIntent.metadata.productId == null) return notFound()
-
-  const product = await db.product.findUnique({
-    where: { id: paymentIntent.metadata.productId },
+  // Await searchParams for Next.js 15
+  const params = await searchParams
+  
+  // For the mock system, we'll extract the timestamp from the payment intent
+  // and find the most recent order
+  // In a real system, you'd store the payment intent ID with the order
+  
+  if (!params.payment_intent || !params.payment_intent.startsWith("mock_pi_")) {
+    return notFound()
+  }
+  
+  // Extract timestamp from mock payment intent ID
+  const parts = params.payment_intent.split("_")
+  const timestamp = parseInt(parts[2])
+  
+  // Find the most recent order created around that time (within 1 minute)
+  const oneMinuteAgo = new Date(timestamp - 60000)
+  const oneMinuteAfter = new Date(timestamp + 60000)
+  
+  const order = await db.order.findFirst({
+    where: {
+      createdAt: {
+        gte: oneMinuteAgo,
+        lte: oneMinuteAfter
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    include: {
+      product: true
+    }
   })
-  if (product == null) return notFound()
-
-  const isSuccess = paymentIntent.status === "succeeded"
+  
+  if (!order || !order.product) {
+    return notFound()
+  }
+  
+  const product = order.product
+  const isSuccess = true // In mock mode, all completed payments are successful
 
   return (
     <div className="max-w-5xl w-full mx-auto space-y-8">
@@ -33,7 +59,7 @@ export default async function SuccessPage({
       <div className="flex gap-4 items-center">
         <div className="aspect-video flex-shrink-0 w-1/3 relative">
           <Image
-            src={product.imagePath}
+            src={`/${product.imagePath}`}
             fill
             alt={product.name}
             className="object-cover"
