@@ -2,6 +2,7 @@ import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard"
 import { Button } from "@/components/ui/button"
 import db from "@/db/db"
 import { cache } from "@/lib/cache"
+import { Product } from "@/generated/prisma"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -29,7 +30,7 @@ export default function HomePage() {
                 title="Most Popular" 
                 productsFetcher={getMostPopularProducts}/>
             <ProductGridSection 
-                title="Newest "
+                title="Newest"
                 productsFetcher={getNewestProducts}/>
         </main>
     )
@@ -56,15 +57,12 @@ ProductGridSectionProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Suspense fallback={
                     <>
-                        < ProductCardSkeleton/>
-                        < ProductCardSkeleton/>
-                        < ProductCardSkeleton/>
+                        <ProductCardSkeleton/>
+                        <ProductCardSkeleton/>
+                        <ProductCardSkeleton/>
                     </>} >
                     <ProductSuspense productsFetcher={productsFetcher} />
                 </Suspense>
-                {(await productsFetcher()).map(product => (
-                    <ProductCard key={product.id} {...product} />
-                ))}
             </div>
         </div>
     )
