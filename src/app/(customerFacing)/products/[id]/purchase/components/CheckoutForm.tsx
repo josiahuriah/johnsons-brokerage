@@ -100,7 +100,7 @@ export function CheckoutForm({ product }: CheckoutFormProps) {
       // Redirect to success page with mock payment intent ID
       router.push(`/payment/success?payment_intent=${paymentIntentId}`)
       
-    } catch (error) {
+    } catch {
       setErrorMessage("Payment failed. Please try again.")
       setIsLoading(false)
     }

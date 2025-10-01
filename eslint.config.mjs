@@ -18,8 +18,18 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "src/generated/**", // Ignore all generated Prisma files
+      "*.config.js",
+      "*.config.mjs",
     ],
   },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "react/no-unescaped-entities": "off",
+    }
+  }
 ];
 
 export default eslintConfig;

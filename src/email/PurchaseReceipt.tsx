@@ -1,4 +1,3 @@
-// src/email/PurchaseReceipt.tsx
 import {
   Body,
   Container,
@@ -79,7 +78,7 @@ export default function PurchaseReceiptEmail({
             
             <Section className="text-gray-500 text-sm mt-8">
               <Text>
-                If you have any questions, please don't hesitate to contact our support team.
+                If you have any questions, please don&apos;t hesitate to contact our support team.
               </Text>
               <Text>
                 This is an automated email. Please do not reply directly to this message.
