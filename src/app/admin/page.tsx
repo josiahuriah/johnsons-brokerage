@@ -3,65 +3,72 @@ import db from "@/db/db";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
 
 async function getSalesData() {
-    const data = await db.order.aggregate({
-        _sum: { pricePaidInCents: true },
+    const data = await db.payment.aggregate({
+        where: { paymentStatus: "COMPLETED" },
+        _sum: { amount: true },
         _count: true
     })
 
+    const amount = data._sum.amount ? Number(data._sum.amount) : 0;
+
     return {
-        amount: (data._sum.pricePaidInCents || 0) / 100,
+        amount: amount,
         numberOfSales: data._count
     }
 }
 
-async function getUserData() {
-    const [userCount, orderData,] = await Promise.all([
-        db.user.count(),
-        db.order.aggregate({
-            _sum: { pricePaidInCents: true}
+async function getCustomerData() {
+    const [customerCount, paymentData] = await Promise.all([
+        db.customer.count(),
+        db.payment.aggregate({
+            where: { paymentStatus: "COMPLETED" },
+            _sum: { amount: true }
         })
     ])
 
-    return{
-        userCount,
-        averageValuePerUser: userCount === 0
-            ? 0
-            : (orderData._sum.pricePaidInCents || 0) / userCount / 100,
-    }
+    const totalRevenue = paymentData._sum.amount ? Number(paymentData._sum.amount) : 0;
 
+    return {
+        customerCount,
+        averageValuePerCustomer: customerCount === 0
+            ? 0
+            : totalRevenue / customerCount,
+    }
 }
 
-async function getProductData() {
-    const [activeCount, inactiveCount] = await Promise.all([
-        db.product.count({where: { isAvailableForPurchase: true}}),
-        db.product.count({where: { isAvailableForPurchase: false}}),
+async function getUnpaidInvoicesData() {
+    const [unpaidCount, unpaidAmount] = await Promise.all([
+        db.invoice.count({ where: { status: { in: ["PENDING", "OVERDUE"] } } }),
+        db.invoice.aggregate({
+            where: { status: { in: ["PENDING", "OVERDUE"] } },
+            _sum: { balanceDue: true }
+        })
     ])
 
-    return {activeCount, inactiveCount}
+    const totalUnpaid = unpaidAmount._sum.balanceDue ? Number(unpaidAmount._sum.balanceDue) : 0;
+
+    return { unpaidCount, totalUnpaid }
 }
-
-
 
 export default async function AdminDashboard() {
-    const [salesData, userData, productData] = await Promise.all([
-        getSalesData(), 
-        getUserData(),
-        getProductData()
+    const [salesData, customerData, unpaidInvoicesData] = await Promise.all([
+        getSalesData(),
+        getCustomerData(),
+        getUnpaidInvoicesData()
     ])
-    
 
     return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <DashboardCard title="Sales" 
-            subtitle={`${formatNumber(salesData.numberOfSales)} Orders`} 
+        <DashboardCard title="Total Revenue"
+            subtitle={`${formatNumber(salesData.numberOfSales)} Payments`}
             body={formatCurrency(salesData.amount)}>
         </DashboardCard>
-        <DashboardCard title="Customers" 
-            subtitle={`${formatCurrency(userData.averageValuePerUser)} Average Value`} 
-            body={formatNumber(userData.userCount)}>
+        <DashboardCard title="Customers"
+            subtitle={`${formatCurrency(customerData.averageValuePerCustomer)} Average Value`}
+            body={formatNumber(customerData.customerCount)}>
         </DashboardCard>
-        <DashboardCard title="Active Products" 
-            subtitle={`${formatNumber(productData.inactiveCount)}  Inactive`} 
-            body={formatNumber(productData.activeCount)}>
+        <DashboardCard title="Unpaid Invoices"
+            subtitle={`${formatCurrency(unpaidInvoicesData.totalUnpaid)} Outstanding`}
+            body={formatNumber(unpaidInvoicesData.unpaidCount)}>
         </DashboardCard>
     </div>
 }
@@ -72,9 +79,7 @@ type DashboardCardProps = {
     body: string
 }
 
-function DashboardCard({ title, subtitle, body }:
-DashboardCardProps
-) {
+function DashboardCard({ title, subtitle, body }: DashboardCardProps) {
     return (
         <Card>
             <CardHeader>
@@ -83,4 +88,5 @@ DashboardCardProps
             </CardHeader>
             <CardContent><p>{body}</p></CardContent>
         </Card>
-)}
+    )
+}
