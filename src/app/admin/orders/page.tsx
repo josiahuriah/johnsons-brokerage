@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreVertical } from "lucide-react"
-import { DeleteDropDownItem } from "./_components/OrderActions"
+import { DeleteDropDownItem } from "./_compenents/OrderActions"
 
 function getOrders() {
   return db.order.findMany({
