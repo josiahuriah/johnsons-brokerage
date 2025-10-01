@@ -21,7 +21,10 @@ export async function GET(
   const file = await fs.readFile(data.product.filePath)
   const extension = data.product.filePath.split(".").pop()
 
-  return new NextResponse(file, {
+  // Convert Buffer to Blob for NextResponse
+  const blob = new Blob([file])
+
+  return new NextResponse(blob, {
     headers: {
       "Content-Disposition": `attachment; filename="${data.product.name}.${extension}"`,
       "Content-Length": size.toString(),
