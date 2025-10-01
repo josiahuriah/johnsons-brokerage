@@ -20,7 +20,8 @@ export async function GET(
     const file = await fs.readFile(product.filePath)
     const extension = product.filePath.split(".").pop()
 
-    return new NextResponse(file, {
+    // TypeScript workaround for Next.js 15 Buffer type issue
+    return new NextResponse(file as unknown as BodyInit, {
         headers: {
             "Content-Disposition": `attachment; filename="${product.name}.${extension}"`,
             "Content-Length": size.toString()
