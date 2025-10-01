@@ -22,7 +22,7 @@ const addSchema = z.object({
 export async function addProduct(prevState: unknown, formData: FormData) {
   const result = addSchema.safeParse(Object.fromEntries(formData.entries()))
   if (result.success === false) {
-    return result.error.formErrors.fieldErrors
+    return result.error.flatten().fieldErrors
   }
 
   const data = result.data
@@ -67,7 +67,7 @@ export async function updateProduct(
 ) {
   const result = editSchema.safeParse(Object.fromEntries(formData.entries()))
   if (result.success === false) {
-    return result.error.formErrors.fieldErrors
+    return result.error.flatten().fieldErrors
   }
 
   const data = result.data
