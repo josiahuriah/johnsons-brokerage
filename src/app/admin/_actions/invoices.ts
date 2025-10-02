@@ -28,7 +28,7 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
     const result = invoiceSchema.safeParse(Object.fromEntries(formData.entries()))
     
     if (result.success === false) {
-        return result.error.formErrors.fieldErrors
+        return result.error.flatten().fieldErrors
     }
 
     const data = result.data
@@ -93,7 +93,7 @@ export async function updateInvoice(
     const result = invoiceSchema.safeParse(Object.fromEntries(formData.entries()))
     
     if (result.success === false) {
-        return result.error.formErrors.fieldErrors
+        return result.error.flatten().fieldErrors
     }
 
     const data = result.data
