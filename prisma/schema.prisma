@@ -4,51 +4,181 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-// Option 1: PostgreSQL (recommended for Vercel/Netlify)
+// PostgreSQL (recommended for Vercel/Netlify)
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+model Admin {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  name      String
+  role      String    @default("STAFF")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  createdInvoices Invoice[] @relation("CreatedBy")
+  updatedInvoices Invoice[] @relation("UpdatedBy")
+}
 
+model Customer {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  companyName   String
+  contactName   String
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  country       String?
+  notes         String?
+  creditLimit   Decimal?
+  accountStatus String    @default("ACTIVE")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  invoices        Invoice[]
+  payments        Payment[]
+  contactMessages ContactMessage[]
+}
+
+model Invoice {
+  id                 String           @id @default(uuid())
+  invoiceNumber      String           @unique
+  customerId         String
+  issueDate          DateTime         @default(now())
+  dueDate            DateTime
+  status             String           @default("PENDING")
+  subtotal           Decimal
+  taxAmount          Decimal          @default(0)
+  totalAmount        Decimal
+  paidAmount         Decimal          @default(0)
+  balanceDue         Decimal
+  poNumber           String?
+  termsAndConditions String?
+  notes              String?
+  createdById        String?
+  updatedById        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  
+  customer    Customer          @relation(fields: [customerId], references: [id])
+  createdBy   Admin?            @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedBy   Admin?            @relation("UpdatedBy", fields: [updatedById], references: [id])
+  lineItems   InvoiceLineItem[]
+  payments    Payment[]
+  
+  @@index([customerId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model InvoiceLineItem {
+  id              String   @id @default(uuid())
+  invoiceId       String
+  lineNumber      Int
+  description     String
+  serviceType     String   @default("OTHER")
+  referenceNumber String?
+  quantity        Decimal  @default(1)
+  unitPrice       Decimal
+  amount          Decimal
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  @@unique([invoiceId, lineNumber])
+  @@index([invoiceId])
+}
+
+model Payment {
+  id                String    @id @default(uuid())
+  paymentNumber     String    @unique
+  invoiceId         String
+  customerId        String
+  amount            Decimal
+  paymentMethod     String
+  paymentStatus     String    @default("PENDING")
+  paymentDate       DateTime  @default(now())
+  last4Digits       String?
+  cardBrand         String?
+  transactionId     String?   @unique
+  processorResponse String?
+  notes             String?
+  receiptSent       Boolean   @default(false)
+  receiptSentAt     DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([paymentStatus])
+}
+
+model ContactMessage {
+  id         String    @id @default(uuid())
+  name       String
+  email      String
+  phone      String?
+  subject    String
+  message    String
+  status     String    @default("UNREAD")
+  customerId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  customer Customer? @relation(fields: [customerId], references: [id])
+  
+  @@index([status])
+}
+
+// Keep these models for compatibility with existing product-related code
+// You can remove these once you've fully migrated to the brokerage system
 model Product {
-  id String @id @default(uuid())
-  name                    String
-  priceInCents            Int
-  filePath                String
-  imagePath               String
-  description             String
-  isAvailableForPurchase  Boolean                  @default(true)
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
-  orders                  Order[]
-  downloadVerifications  DownloadVerification[] 
+  id                     String                 @id @default(uuid())
+  name                   String
+  priceInCents           Int
+  filePath               String
+  imagePath              String
+  description            String
+  isAvailableForPurchase Boolean                @default(true)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  orders                 Order[]
+  downloadVerifications  DownloadVerification[]
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  orders     Order[]
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
 }
 
 model Order {
-  id                String      @id @default(uuid())
-  pricePaidInCents  Int
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-
-  userId            String
-  productId         String
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product           Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  id               String   @id @default(uuid())
+  pricePaidInCents Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  userId    String
+  productId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 }
 
 model DownloadVerification {
-  id          String    @id @default(uuid())
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
