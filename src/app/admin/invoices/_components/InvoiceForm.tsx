@@ -17,7 +17,8 @@ export type FormState = {
     totalAmount?: string[]
     description?: string[]
     file?: string[]
-    general?: string[]
+} | {
+    general: string[]
 }
 
 type InvoiceFormProps = {
@@ -69,7 +70,9 @@ export function InvoiceForm({ invoice, customers }: InvoiceFormProps) {
                         ))}
                     </SelectContent>
                 </Select>
-                {error.customerId && <div className="text-destructive">{error.customerId}</div>}
+                {"customerId" in error && error.customerId && (
+                    <div className="text-destructive">{error.customerId}</div>
+                )}
             </div>
 
             <div className="space-y-2">
@@ -87,7 +90,9 @@ export function InvoiceForm({ invoice, customers }: InvoiceFormProps) {
                 <div className="text-muted-foreground">
                     {formatCurrency(totalAmount || 0)}
                 </div>
-                {error.totalAmount && <div className="text-destructive">{error.totalAmount}</div>}
+                {"totalAmount" in error && error.totalAmount && (
+                    <div className="text-destructive">{error.totalAmount}</div>
+                )}
             </div>
 
             <div className="space-y-2">
@@ -99,7 +104,9 @@ export function InvoiceForm({ invoice, customers }: InvoiceFormProps) {
                     placeholder="Enter invoice description or notes..."
                     rows={4}
                 />
-                {error.description && <div className="text-destructive">{error.description}</div>}
+                {"description" in error && error.description && (
+                    <div className="text-destructive">{error.description}</div>
+                )}
             </div>
 
             <div className="space-y-2">
@@ -114,10 +121,12 @@ export function InvoiceForm({ invoice, customers }: InvoiceFormProps) {
                         Current file attached
                     </div>
                 )}
-                {error.file && <div className="text-destructive">{error.file}</div>}
+                {"file" in error && error.file && (
+                    <div className="text-destructive">{error.file}</div>
+                )}
             </div>
 
-            {error.general && (
+            {"general" in error && error.general && (
                 <div className="text-destructive">{error.general}</div>
             )}
 
@@ -131,27 +140,4 @@ function SubmitButton() {
     return <Button type="submit" disabled={pending}>
         {pending ? "Creating..." : "Create Invoice"}
     </Button>
-}
-
-// src/app/admin/invoices/[id]/edit/page.tsx
-import db from "@/db/db";
-import { PageHeader } from "@/app/admin/_components/PageHeader";
-import { InvoiceForm } from "../../_components/InvoiceForm";
-
-export default async function EditInvoicePage({
-    params: { id },
-}: {
-    params: { id: string }
-}) {
-    const [invoice, customers] = await Promise.all([
-        db.invoice.findUnique({ where: { id } }),
-        db.customer.findMany({ orderBy: { companyName: "asc" } })
-    ])
-    
-    return (
-        <>
-            <PageHeader>Edit Invoice</PageHeader>
-            <InvoiceForm invoice={invoice} customers={customers} />
-        </>
-    )
 }

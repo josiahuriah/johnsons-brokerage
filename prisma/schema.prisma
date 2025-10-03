@@ -7,7 +7,7 @@ generator client {
 // PostgreSQL (recommended for Vercel/Netlify)
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("jbrokstor_POSTGRES_URL")
 }
 
 model Admin {
