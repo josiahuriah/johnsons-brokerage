@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Ecommerce",
-  description: "Selling Solutions",
+  title: "Vals Brokerage Services",
+  description: "Brokerage Solutions",
 };
 
 export default function RootLayout({

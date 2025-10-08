@@ -2,13 +2,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { CheckCircle2 } from "lucide-react"
+import Image from "next/image"
 
 export default function HomePage() {
     return (
-        <main className="space-y-12">
+         <main className="space-y-12">
             {/* Hero Section */}
             <section className="text-center space-y-4 py-12">
-                <h1 className="text-4xl font-bold">Johnson's Customs Brokerage Services</h1>
+                <div className="flex justify-center mb-6">
+                    <Image 
+                        src="/logo.png" 
+                        alt="Val's Brokerage Service Logo" 
+                        width={500} 
+                        height={200}
+                        priority
+                    />
+                </div>
+                <h1 className="text-4xl font-bold">Val's Brokerage</h1>
                 <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                     Fast and reliable customs clearance for your imports and exports
                 </p>
@@ -28,12 +38,28 @@ export default function HomePage() {
                 <div className="grid md:grid-cols-3 gap-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Import Entry</CardTitle>
+                            <CardTitle>Import Entry - LCL</CardTitle>
                             <CardDescription>Quick and efficient import processing</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
-                                <p className="text-3xl font-bold">$75</p>
+                                <p className="text-3xl font-bold">$100</p>
+                                <p className="text-sm text-muted-foreground">per entry</p>
+                                <div className="pt-2 border-t">
+                                    <p className="text-sm">+$5 per line item</p>
+                                    <p className="text-xs text-muted-foreground">(for invoices with more than 4 lines)</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Import Entry - Containerized Cargo</CardTitle>
+                            <CardDescription>Clearance for Full containers</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                <p className="text-3xl font-bold">$300</p>
                                 <p className="text-sm text-muted-foreground">per entry</p>
                                 <div className="pt-2 border-t">
                                     <p className="text-sm">+$5 per line item</p>
@@ -62,16 +88,48 @@ export default function HomePage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Permits</CardTitle>
+                            <CardTitle>OGA Permits</CardTitle>
                             <CardDescription>Fast permit processing</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
-                                <p className="text-3xl font-bold">$20</p>
+                                <p className="text-3xl font-bold">$50</p>
                                 <p className="text-sm text-muted-foreground">per permit</p>
                                 <div className="pt-2 border-t">
                                     <p className="text-sm">Quick turnaround</p>
                                     <p className="text-xs text-muted-foreground">Most permits same week</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>OGA Submission</CardTitle>
+                            <CardDescription>For all other OGA processing</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                <p className="text-3xl font-bold">$40</p>
+                                <p className="text-sm text-muted-foreground">per entry</p>
+                                <div className="pt-2 border-t">
+                                    <p className="text-sm">All OGA requirements</p>
+                                    <p className="text-xs text-muted-foreground">From health to agriculture permits</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Consultancy</CardTitle>
+                            <CardDescription>Expert Advice for related inquiries</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                <p className="text-l font-bold">Custom Pricing</p>
+                                <p className="text-sm text-muted-foreground">Contact us for a detailed quote</p>
+                                <div className="pt-2 border-t">
+                                    <p className="text-sm">Flexible rates</p>
+                                    <p className="text-xs text-muted-foreground">Depends on consultation requirements</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -111,6 +169,21 @@ export default function HomePage() {
                             <p className="text-muted-foreground">Always available when you need assistance with your shipments</p>
                         </div>
                     </div>
+                </div>
+            </section>
+      {/* Contact CTA Section */}
+            <section className="text-center space-y-4 py-12 bg-primary/5 rounded-lg">
+                <h2 className="text-3xl font-bold">Ready to Get Started?</h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Contact us today for a consultation or to discuss your customs brokerage needs
+                </p>
+                <div className="flex gap-4 justify-center pt-4">
+                    <Button size="lg" asChild>
+                        <Link href="/contact">Contact Us</Link>
+                    </Button>
+                    <Button size="lg" variant="outline" asChild>
+                        <Link href="/invoice-payment">Pay Invoice</Link>
+                    </Button>
                 </div>
             </section>
         </main>

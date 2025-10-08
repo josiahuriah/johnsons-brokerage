@@ -17,7 +17,7 @@ export default function AboutPage() {
             <section className="space-y-6">
                 <h2 className="text-2xl font-bold">Our Story</h2>
                 <p className="text-muted-foreground">
-                    Johnson's Customs Brokerage has grown from a small family-owned 
+                    Val's Customs Brokerage has grown from a small family-owned 
                     business to one of the most trusted names in customs clearance. Our commitment to 
                     accuracy, compliance, and customer service has made us the preferred choice for 
                     businesses of all sizes.

@@ -134,8 +134,8 @@ export default function ContactPage() {
                                 <div>
                                     <p className="font-medium">Email</p>
                                     <p className="text-sm text-muted-foreground">
-                                        General: info@johnsonsbrokerage.com<br />
-                                        Support: support@johnsonsbrokerage.com
+                                        General: info@valsbrokerage.com<br />
+                                        Support: support@valsbrokerage.com
                                     </p>
                                 </div>
                             </div>
