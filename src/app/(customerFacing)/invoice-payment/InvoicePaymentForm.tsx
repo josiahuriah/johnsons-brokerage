@@ -23,6 +23,10 @@ export function InvoicePaymentForm() {
     const [expiryDate, setExpiryDate] = useState("")
     const [cvv, setCvv] = useState("")
     const [cardholderName, setCardholderName] = useState("")
+    const [billingAddress, setBillingAddress] = useState("")
+    const [billingCity, setBillingCity] = useState("")
+    const [billingState, setBillingState] = useState("")
+    const [billingZip, setBillingZip] = useState("")
 
     // Fetch invoice details when invoice number is entered
     const fetchInvoiceDetails = async () => {
@@ -45,20 +49,39 @@ export function InvoicePaymentForm() {
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault()
-        
+
         // Basic validation
         if (!invoiceNumber || !email || !phone || !paymentAmount || !cardNumber || !expiryDate || !cvv || !cardholderName) {
-            setErrorMessage("Please fill in all fields")
+            setErrorMessage("Please fill in all required fields")
             return
         }
-        
+
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
             setErrorMessage("Please enter a valid email address")
             return
         }
-        
+
+        // Card number validation (must be 13-19 digits)
+        const cleanCardNumber = cardNumber.replace(/\s+/g, "")
+        if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
+            setErrorMessage("Please enter a valid card number")
+            return
+        }
+
+        // Expiry validation
+        if (expiryDate.length !== 5) {
+            setErrorMessage("Please enter expiry date in MM/YY format")
+            return
+        }
+
+        // CVV validation
+        if (cvv.length < 3 || cvv.length > 4) {
+            setErrorMessage("Please enter a valid CVV")
+            return
+        }
+
         setIsLoading(true)
         setErrorMessage(undefined)
 
@@ -74,24 +97,29 @@ export function InvoicePaymentForm() {
                     email,
                     phone,
                     paymentAmount: parseFloat(paymentAmount),
-                    paymentMethod: {
-                        cardNumber: cardNumber.slice(-4),
-                        cardholderName,
-                    }
+                    cardNumber: cleanCardNumber,
+                    cardName: cardholderName,
+                    cardExp: expiryDate,
+                    cardCvv: cvv,
+                    billingAddress,
+                    billingCity,
+                    billingState,
+                    billingZip,
+                    billingCountry: "US"
                 }),
             })
-            
+
+            const data = await response.json()
+
             if (!response.ok) {
-                throw new Error("Payment processing failed")
+                throw new Error(data.message || "Payment processing failed")
             }
-            
-            const { paymentId } = await response.json()
-            
+
             // Redirect to receipt page
-            router.push(`/invoice-payment/receipt?payment=${paymentId}`)
-            
+            router.push(`/invoice-payment/receipt?payment=${data.paymentId}`)
+
         } catch (error) {
-            setErrorMessage("Payment failed. Please try again.")
+            setErrorMessage(error instanceof Error ? error.message : "Payment failed. Please try again.")
             setIsLoading(false)
         }
     }
@@ -192,59 +220,116 @@ export function InvoicePaymentForm() {
                             {paymentAmount && formatCurrency(parseFloat(paymentAmount))}
                         </div>
                     </div>
-                    
-                    {/* Card Details */}
-                    <div className="space-y-2">
-                        <Label htmlFor="cardNumber">Card Number</Label>
-                        <Input
-                            id="cardNumber"
-                            type="text"
-                            placeholder="4242 4242 4242 4242"
-                            value={cardNumber}
-                            onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                            maxLength={19}
-                            required
-                        />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
+
+                    {/* Billing Address */}
+                    <div className="space-y-4 pt-4 border-t">
+                        <h3 className="font-medium">Billing Address</h3>
+
                         <div className="space-y-2">
-                            <Label htmlFor="expiry">Expiry Date</Label>
+                            <Label htmlFor="billingAddress">Street Address</Label>
                             <Input
-                                id="expiry"
+                                id="billingAddress"
                                 type="text"
-                                placeholder="MM/YY"
-                                value={expiryDate}
-                                onChange={(e) => setExpiryDate(formatExpiry(e.target.value))}
+                                placeholder="123 Main St"
+                                value={billingAddress}
+                                onChange={(e) => setBillingAddress(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="billingCity">City</Label>
+                                <Input
+                                    id="billingCity"
+                                    type="text"
+                                    placeholder="New York"
+                                    value={billingCity}
+                                    onChange={(e) => setBillingCity(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="billingState">State</Label>
+                                <Input
+                                    id="billingState"
+                                    type="text"
+                                    placeholder="NY"
+                                    value={billingState}
+                                    onChange={(e) => setBillingState(e.target.value)}
+                                    maxLength={2}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="billingZip">ZIP Code</Label>
+                            <Input
+                                id="billingZip"
+                                type="text"
+                                placeholder="10001"
+                                value={billingZip}
+                                onChange={(e) => setBillingZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
                                 maxLength={5}
-                                required
-                            />
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <Label htmlFor="cvv">CVV</Label>
-                            <Input
-                                id="cvv"
-                                type="text"
-                                placeholder="123"
-                                value={cvv}
-                                onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                                maxLength={4}
-                                required
                             />
                         </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                        <Label htmlFor="cardholderName">Cardholder Name</Label>
-                        <Input
-                            id="cardholderName"
-                            type="text"
-                            placeholder="John Doe"
-                            value={cardholderName}
-                            onChange={(e) => setCardholderName(e.target.value)}
-                            required
-                        />
+
+                    {/* Card Details */}
+                    <div className="space-y-4 pt-4 border-t">
+                        <h3 className="font-medium">Payment Information</h3>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="cardNumber">Card Number</Label>
+                            <Input
+                                id="cardNumber"
+                                type="text"
+                                placeholder="4242 4242 4242 4242"
+                                value={cardNumber}
+                                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                                maxLength={19}
+                                required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="expiry">Expiry Date</Label>
+                                <Input
+                                    id="expiry"
+                                    type="text"
+                                    placeholder="MM/YY"
+                                    value={expiryDate}
+                                    onChange={(e) => setExpiryDate(formatExpiry(e.target.value))}
+                                    maxLength={5}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="cvv">CVV</Label>
+                                <Input
+                                    id="cvv"
+                                    type="text"
+                                    placeholder="123"
+                                    value={cvv}
+                                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                                    maxLength={4}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="cardholderName">Cardholder Name</Label>
+                            <Input
+                                id="cardholderName"
+                                type="text"
+                                placeholder="John Doe"
+                                value={cardholderName}
+                                onChange={(e) => setCardholderName(e.target.value)}
+                                required
+                            />
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter>

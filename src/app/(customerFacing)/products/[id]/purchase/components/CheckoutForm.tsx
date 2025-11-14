@@ -41,27 +41,46 @@ export function CheckoutForm({ product }: CheckoutFormProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    
+
     // Basic validation
     if (!email || !cardNumber || !expiryDate || !cvv || !cardholderName) {
-      setErrorMessage("Please fill in all fields")
+      setErrorMessage("Please fill in all required fields")
       return
     }
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       setErrorMessage("Please enter a valid email address")
       return
     }
-    
+
+    // Card number validation (must be 13-19 digits)
+    const cleanCardNumber = cardNumber.replace(/\s+/g, "")
+    if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
+      setErrorMessage("Please enter a valid card number")
+      return
+    }
+
+    // Expiry validation
+    if (expiryDate.length !== 5) {
+      setErrorMessage("Please enter expiry date in MM/YY format")
+      return
+    }
+
+    // CVV validation
+    if (cvv.length < 3 || cvv.length > 4) {
+      setErrorMessage("Please enter a valid CVV")
+      return
+    }
+
     setIsLoading(true)
     setErrorMessage(undefined)
 
     try {
       // Check if user already purchased this product
       const orderExists = await userOrderExists(email, product.id)
-      
+
       if (orderExists) {
         setErrorMessage(
           "You have already purchased this product. Try downloading it from the My Orders page"
@@ -69,11 +88,8 @@ export function CheckoutForm({ product }: CheckoutFormProps) {
         setIsLoading(false)
         return
       }
-      
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Create mock payment session
+
+      // Process payment through Plug n Pay
       const response = await fetch("/api/mock-payment", {
         method: "POST",
         headers: {
@@ -83,25 +99,24 @@ export function CheckoutForm({ product }: CheckoutFormProps) {
           email,
           productId: product.id,
           priceInCents: product.priceInCents,
-          // Mock payment details (not used in processing, just for demonstration)
-          paymentMethod: {
-            cardNumber: cardNumber.slice(-4), // Only send last 4 digits
-            cardholderName,
-          }
+          cardNumber: cleanCardNumber,
+          cardName: cardholderName,
+          cardExp: expiryDate,
+          cardCvv: cvv,
         }),
       })
-      
+
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error("Payment processing failed")
+        throw new Error(data.message || "Payment processing failed")
       }
-      
-      const { paymentIntentId } = await response.json()
-      
-      // Redirect to success page with mock payment intent ID
-      router.push(`/payment/success?payment_intent=${paymentIntentId}`)
-      
-    } catch {
-      setErrorMessage("Payment failed. Please try again.")
+
+      // Redirect to success page with payment intent ID
+      router.push(`/payment/success?payment_intent=${data.paymentIntentId}`)
+
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Payment failed. Please try again.")
       setIsLoading(false)
     }
   }
@@ -148,8 +163,8 @@ export function CheckoutForm({ product }: CheckoutFormProps) {
         <Card>
           <CardHeader>
             <CardTitle>Checkout</CardTitle>
-            <CardDescription className="text-orange-600">
-              Demo Mode: Use any test card number (e.g., 4242 4242 4242 4242)
+            <CardDescription>
+              Enter your payment information to complete the purchase
             </CardDescription>
             {errorMessage && (
               <CardDescription className="text-destructive">
